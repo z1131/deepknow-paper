@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REGISTRY: crpi-16uyo5eg9cykcl2r.cn-hangzhou.personal.cr.aliyuncs.com
-  NAMESPACE: deepknow
+  REGISTRY: ${{ secrets.ACR_REGISTRY }}
+  NAMESPACE: ${{ secrets.ACR_NAMESPACE }}
   IMAGE_NAME: deepknow-paper-server
 
 jobs:
