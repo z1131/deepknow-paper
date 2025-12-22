@@ -1,0 +1,8 @@
+.env
+.DS_Store
+.idea/
+.vscode/
+*.log
+deepknow-paper-server/target/
+deepknow-paper-ui/dist/
+deepknow-paper-ui/node_modules/

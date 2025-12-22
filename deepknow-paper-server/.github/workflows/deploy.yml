@@ -1,0 +1,126 @@
+name: Deploy Backend (Aliyun ACR)
+# Force CI Trigger
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: crpi-16uyo5eg9cykcl2r.cn-hangzhou.personal.cr.aliyuncs.com
+  NAMESPACE: deepwrite
+  IMAGE_TAG: latest
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Log in to Aliyun ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      - name: Build & Push Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: ./dw-gateway
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/dw-gateway:${{ env.IMAGE_TAG }}
+
+      - name: Build & Push Auth
+        uses: docker/build-push-action@v5
+        with:
+          context: ./dw-auth
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/dw-auth:${{ env.IMAGE_TAG }}
+
+      - name: Build & Push Core
+        uses: docker/build-push-action@v5
+        with:
+          context: ./dw-core
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/dw-core:${{ env.IMAGE_TAG }}
+
+  deploy-ecs-a:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Copy Compose & Nginx Config
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST_A }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "deploy/docker-compose-ecs-a.yml"
+          target: "/opt/deepwrite/"
+          strip_components: 1
+
+      - name: Deploy ECS A
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST_A }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /opt/deepwrite
+            # Login ACR
+            docker login -u ${{ secrets.ALIYUN_ACR_USERNAME }} -p ${{ secrets.ALIYUN_ACR_PASSWORD }} crpi-16uyo5eg9cykcl2r.cn-hangzhou.personal.cr.aliyuncs.com
+            
+            export ACR_REGISTRY=crpi-16uyo5eg9cykcl2r.cn-hangzhou.personal.cr.aliyuncs.com
+            export ACR_NAMESPACE=deepwrite
+            
+            docker compose -f docker-compose-ecs-a.yml pull
+            docker compose -f docker-compose-ecs-a.yml up -d
+            docker image prune -f
+
+  deploy-ecs-b:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy Compose
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST_B }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "deploy/docker-compose-ecs-b.yml"
+          target: "/opt/deepwrite/"
+          strip_components: 1
+
+      - name: Deploy ECS B
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST_B }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /opt/deepwrite
+            # Login ACR
+            docker login -u ${{ secrets.ALIYUN_ACR_USERNAME }} -p ${{ secrets.ALIYUN_ACR_PASSWORD }} crpi-16uyo5eg9cykcl2r.cn-hangzhou.personal.cr.aliyuncs.com
+            
+            export ACR_REGISTRY=crpi-16uyo5eg9cykcl2r.cn-hangzhou.personal.cr.aliyuncs.com
+            export ACR_NAMESPACE=deepwrite
+            
+            docker compose -f docker-compose-ecs-b.yml pull
+            docker compose -f docker-compose-ecs-b.yml up -d
+            docker image prune -f

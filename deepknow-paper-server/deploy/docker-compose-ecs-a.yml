@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # === Infrastructure ===
+  nacos:
+    image: nacos/nacos-server:v2.3.1
+    container_name: dw-nacos
+    environment:
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=${MYSQL_HOST}
+      - MYSQL_SERVICE_PORT=${MYSQL_PORT}
+      - MYSQL_SERVICE_DB_NAME=nacos_config
+      - MYSQL_SERVICE_USER=${MYSQL_USER}
+      - MYSQL_SERVICE_PASSWORD=${MYSQL_PASSWORD}
+      - JVM_XMS=256m
+      - JVM_XMX=512m
+    network_mode: "host" # Use host network for Nacos to bind 172.17.150.78 directly
+    mem_limit: 1g 
+    restart: always
+
+  dw-nginx:
+    image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/dw-fronted:latest
+    container_name: dw-nginx
+    network_mode: "host"
+    restart: always
+
+  # === Microservices ===
+  dw-gateway:
+    image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/dw-gateway:latest
+    container_name: dw-gateway
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848 # Since Nacos is on same host
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=127.0.0.1:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_IP=172.17.150.78 # Force register as Private IP
+      - SPRING_CLOUD_NACOS_USERNAME=${NACOS_USERNAME}
+      - SPRING_CLOUD_NACOS_PASSWORD=${NACOS_PASSWORD}
+      - JAVA_OPTS=-Xms256m -Xmx256m
+    network_mode: "host" # Use host network to access Nacos and expose port
+    mem_limit: 512m
+    restart: always
+
+  dw-auth:
+    image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/dw-auth:latest
+    container_name: dw-auth
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=127.0.0.1:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_IP=172.17.150.78
+      - SPRING_CLOUD_NACOS_USERNAME=${NACOS_USERNAME}
+      - SPRING_CLOUD_NACOS_PASSWORD=${NACOS_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB_NAME}?useUnicode=true&characterEncoding=utf-8&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JAVA_OPTS=-Xms256m -Xmx256m
+    network_mode: "host"
+    mem_limit: 512m
+    restart: always

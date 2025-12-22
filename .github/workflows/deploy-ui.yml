@@ -1,0 +1,67 @@
+name: Deploy Paper UI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'deepknow-paper-ui/**'
+      - '.github/workflows/deploy-ui.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: crpi-16uyo5eg9cykcl2r.cn-hangzhou.personal.cr.aliyuncs.com
+  NAMESPACE: deepknow
+  IMAGE_NAME: deepknow-paper-ui
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Alibaba Cloud ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./deepknow-paper-ui
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to ECS 1
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ACR_REGISTRY: ${{ env.REGISTRY }}
+          ACR_IMAGE: ${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+        with:
+          host: ${{ secrets.ECS_1_HOST }}
+          username: ${{ secrets.ECS_1_USER }}
+          key: ${{ secrets.ECS_1_SSH_PRIVATE_KEY }}
+          envs: ACR_REGISTRY,ACR_IMAGE,ACR_USERNAME,ACR_PASSWORD
+          script: |
+            set -euo pipefail
+            
+            # Simple docker run for frontend
+            echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
+            
+            docker pull $ACR_REGISTRY/$ACR_IMAGE:latest
+            docker stop paper-ui || true
+            docker rm paper-ui || true
+            
+            # Note: Port 80 might be taken by goodtalk-ui or nginx proxy.
+            # Assuming we run on a different port behind main nginx, e.g. 8081 or just 80 for checking
+            # User said "deploy... let it run". If goodtalk-ui uses 80, this will conflict.
+            # I will use port 8082 for now to be safe, or 3000? 
+            # goodtalk-ui used 80:80. I'll use 3001:80 for paper-ui to avoid conflict if on same host.
+            
+            docker run -d --name paper-ui \
+              --restart unless-stopped \
+              -p 3001:80 \
+              $ACR_REGISTRY/$ACR_IMAGE:latest

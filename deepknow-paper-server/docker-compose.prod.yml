@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  dw-gateway:
+    image: ${ACR_REGISTRY}/deepknow/deepknow-paper-server:latest
+    container_name: paper-gateway
+    environment:
+      - SERVICE_NAME=gateway
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=${NACOS_SERVER_ADDR}
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=${NACOS_SERVER_ADDR}
+      - SPRING_CLOUD_NACOS_USERNAME=${NACOS_USERNAME}
+      - SPRING_CLOUD_NACOS_PASSWORD=${NACOS_PASSWORD}
+      - SPRING_CLOUD_NACOS_CONFIG_GROUP=DEEPKNOW_GROUP
+    ports:
+      - "8080:8080" # Gateway port
+    restart: always
+
+  dw-auth:
+    image: ${ACR_REGISTRY}/deepknow/deepknow-paper-server:latest
+    container_name: paper-auth
+    environment:
+      - SERVICE_NAME=auth
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=${NACOS_SERVER_ADDR}
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=${NACOS_SERVER_ADDR}
+      - SPRING_CLOUD_NACOS_USERNAME=${NACOS_USERNAME}
+      - SPRING_CLOUD_NACOS_PASSWORD=${NACOS_PASSWORD}
+      - SPRING_CLOUD_NACOS_CONFIG_GROUP=DEEPKNOW_GROUP
+    restart: always
+
+  dw-core:
+    image: ${ACR_REGISTRY}/deepknow/deepknow-paper-server:latest
+    container_name: paper-core
+    environment:
+      - SERVICE_NAME=core
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=${NACOS_SERVER_ADDR}
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=${NACOS_SERVER_ADDR}
+      - SPRING_CLOUD_NACOS_USERNAME=${NACOS_USERNAME}
+      - SPRING_CLOUD_NACOS_PASSWORD=${NACOS_PASSWORD}
+      - SPRING_CLOUD_NACOS_CONFIG_GROUP=DEEPKNOW_GROUP
+    restart: always

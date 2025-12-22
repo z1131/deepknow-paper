@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  dw-core:
+    image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/dw-core:latest
+    container_name: dw-core
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=172.17.150.78:8848 # Connect to ECS A
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=172.17.150.78:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_IP=172.17.150.77 # Register ECS B Private IP
+      - SPRING_CLOUD_NACOS_USERNAME=${NACOS_USERNAME}
+      - SPRING_CLOUD_NACOS_PASSWORD=${NACOS_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB_NAME}?useUnicode=true&characterEncoding=utf-8&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OSS_ENDPOINT=${OSS_ENDPOINT}
+      - OSS_BUCKET_NAME=${OSS_BUCKET_NAME}
+      - OSS_ACCESS_KEY_ID=${OSS_ACCESS_KEY_ID}
+      - OSS_ACCESS_KEY_SECRET=${OSS_ACCESS_KEY_SECRET}
+      - JAVA_OPTS=-Xms512m -Xmx1024m
+    network_mode: "host"
+    mem_limit: 2g
+    restart: always
