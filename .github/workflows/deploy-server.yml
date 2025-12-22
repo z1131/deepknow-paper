@@ -88,15 +88,6 @@ jobs:
           script: |
             set -euo pipefail
 
-            # Ensure .env exists or create simple one if needed for NACOS vars
-            if [ ! -f /root/deepknow-paper/deepknow-paper-server/.env ]; then
-               # Fallback: create default .env if missing
-               echo "NACOS_SERVER_ADDR=172.17.150.78:8848" > /root/deepknow-paper/deepknow-paper-server/.env
-               echo "NACOS_USERNAME=nacos" >> /root/deepknow-paper/deepknow-paper-server/.env
-               echo "NACOS_PASSWORD=Aa1231231212123" >> /root/deepknow-paper/deepknow-paper-server/.env
-               echo "ACR_REGISTRY=$ACR_REGISTRY" >> /root/deepknow-paper/deepknow-paper-server/.env
-            fi
-
             echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
 
             docker compose -f /root/deepknow-paper/deepknow-paper-server/docker-compose.prod.yml pull
@@ -144,13 +135,6 @@ jobs:
           envs: ACR_REGISTRY,ACR_USERNAME,ACR_PASSWORD
           script: |
             set -euo pipefail
-
-            if [ ! -f /root/deepknow-paper/deepknow-paper-server/.env ]; then
-               echo "NACOS_SERVER_ADDR=172.17.150.78:8848" > /root/deepknow-paper/deepknow-paper-server/.env
-               echo "NACOS_USERNAME=nacos" >> /root/deepknow-paper/deepknow-paper-server/.env
-               echo "NACOS_PASSWORD=Aa1231231212123" >> /root/deepknow-paper/deepknow-paper-server/.env
-               echo "ACR_REGISTRY=$ACR_REGISTRY" >> /root/deepknow-paper/deepknow-paper-server/.env
-            fi
 
             echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
 
