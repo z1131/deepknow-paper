@@ -4,13 +4,12 @@ services:
     image: ${ACR_REGISTRY}/deepknow/deepknow-paper-server:latest
     container_name: paper-server
     environment:
-      # [关键] 显式指定 Nacos 地址，不再依赖本地 .env
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=47.114.90.156:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=47.114.90.156:8848
+      # 使用内网 IP 连接 Nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=172.17.150.78:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=172.17.150.78:8848
       - SPRING_CLOUD_NACOS_USERNAME=nacos
       - SPRING_CLOUD_NACOS_PASSWORD=nacos
       - SPRING_CLOUD_NACOS_CONFIG_GROUP=DEEPKNOW_GROUP
-      # 设置时区
       - TZ=Asia/Shanghai
     ports:
       - "8002:8002"
