@@ -71,7 +71,7 @@ jobs:
           username: ${{ secrets.ECS_1_USER }}
           key: ${{ secrets.ECS_1_SSH_PRIVATE_KEY }}
           source: deepknow-paper-server/docker-compose.prod.yml
-          target: /root/deepknow-paper/
+          target: /root/deepknow-paper/deepknow-paper-server
           strip_components: 1
 
       - name: Pull and restart (ECS 1)
@@ -89,10 +89,63 @@ jobs:
             set -euo pipefail
 
             # Ensure .env exists or create simple one if needed for NACOS vars
-            # Ideally user should have set up .env on server
-            # We reference standard NACOS env vars in compose
             if [ ! -f /root/deepknow-paper/deepknow-paper-server/.env ]; then
-               # Fallback: create default .env if missing, assuming omni-agent settings
+               # Fallback: create default .env if missing
+               echo "NACOS_SERVER_ADDR=172.17.150.78:8848" > /root/deepknow-paper/deepknow-paper-server/.env
+               echo "NACOS_USERNAME=nacos" >> /root/deepknow-paper/deepknow-paper-server/.env
+               echo "NACOS_PASSWORD=Aa1231231212123" >> /root/deepknow-paper/deepknow-paper-server/.env
+               echo "ACR_REGISTRY=$ACR_REGISTRY" >> /root/deepknow-paper/deepknow-paper-server/.env
+            fi
+
+            echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
+
+            docker compose -f /root/deepknow-paper/deepknow-paper-server/docker-compose.prod.yml pull
+            docker compose -f /root/deepknow-paper/deepknow-paper-server/docker-compose.prod.yml down --remove-orphans || true
+            docker compose -f /root/deepknow-paper/deepknow-paper-server/docker-compose.prod.yml up -d
+
+  deploy_ecs_2:
+    needs: deploy_ecs_1
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare deploy dir (ECS 2)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ECS_2_HOST }}
+          username: ${{ secrets.ECS_2_USER }}
+          key: ${{ secrets.ECS_2_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            mkdir -p /root/deepknow-paper/deepknow-paper-server
+
+      - name: Upload docker-compose.prod.yml (ECS 2)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ECS_2_HOST }}
+          username: ${{ secrets.ECS_2_USER }}
+          key: ${{ secrets.ECS_2_SSH_PRIVATE_KEY }}
+          source: deepknow-paper-server/docker-compose.prod.yml
+          target: /root/deepknow-paper/deepknow-paper-server
+          strip_components: 1
+
+      - name: Pull and restart (ECS 2)
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ACR_REGISTRY: ${{ env.REGISTRY }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+        with:
+          host: ${{ secrets.ECS_2_HOST }}
+          username: ${{ secrets.ECS_2_USER }}
+          key: ${{ secrets.ECS_2_SSH_PRIVATE_KEY }}
+          envs: ACR_REGISTRY,ACR_USERNAME,ACR_PASSWORD
+          script: |
+            set -euo pipefail
+
+            if [ ! -f /root/deepknow-paper/deepknow-paper-server/.env ]; then
                echo "NACOS_SERVER_ADDR=172.17.150.78:8848" > /root/deepknow-paper/deepknow-paper-server/.env
                echo "NACOS_USERNAME=nacos" >> /root/deepknow-paper/deepknow-paper-server/.env
                echo "NACOS_PASSWORD=Aa1231231212123" >> /root/deepknow-paper/deepknow-paper-server/.env
