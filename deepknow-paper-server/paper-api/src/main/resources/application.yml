@@ -1,42 +1,27 @@
+# ============================================================
+# Paper Server 本地配置
+# 业务配置从 Nacos 加载：paper-server.yaml + common.yaml
+# ============================================================
+
 server:
   port: 8002
 
 spring:
+  application:
+    name: paper-server
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/deepwrite?useUnicode=true&characterEncoding=utf-8&useSSL=false
-    username: root
-    password: password
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      username: ${REDIS_USERNAME}
-      password: ${REDIS_PASSWORD}
-  
   flyway:
     enabled: false
 
-  ai:
-    google:
-      gemini:
-        api-key: ${GEMINI_API_KEY}
-    
-deepseek:
-  api-key: ${DEEPSEEK_API_KEY}
-  base-url: https://api.deepseek.com
-
-aliyun:
-  oss:
-    endpoint: ${OSS_ENDPOINT}
-    access-key-id: ${OSS_ACCESS_KEY_ID}
-    access-key-secret: ${OSS_ACCESS_KEY_SECRET}
-    bucket-name: ${OSS_BUCKET_NAME}
-
+# MyBatis-Plus 配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+
+# 日志配置
+logging:
+  level:
+    com.deepknow.paper: DEBUG
