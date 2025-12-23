@@ -3,6 +3,8 @@ services:
   paper-server:
     image: ${ACR_REGISTRY}/deepknow/deepknow-paper-server:latest
     container_name: paper-server
+    env_file:
+      - /etc/deepknow.env
     environment:
       # 使用内网 IP 连接 Nacos
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=172.17.150.78:8848
