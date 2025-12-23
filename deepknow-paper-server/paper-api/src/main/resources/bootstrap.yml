@@ -5,17 +5,20 @@ spring:
     nacos:
       config:
         enabled: true
-        server-addr: 47.114.90.156:8848
+        server-addr: 172.17.150.78:8848
+        namespace: public
         file-extension: yaml
-        username: ${SPRING_CLOUD_NACOS_USERNAME:nacos}
-        password: ${SPRING_CLOUD_NACOS_PASSWORD:nacos}
-        group: ${SPRING_CLOUD_NACOS_CONFIG_GROUP:DEEPKNOW_GROUP}
+        username: nacos
+        password: Aa1231231212123
+        group: DEEPKNOW_GROUP
         shared-configs:
-          - data-id: common.yaml
-            group: ${SPRING_CLOUD_NACOS_CONFIG_GROUP:DEEPKNOW_GROUP}
+          - dataId: common.yaml
+            group: DEEPKNOW_GROUP
             refresh: true
       discovery:
         enabled: true
-        server-addr: 47.114.90.156:8848
-        username: ${SPRING_CLOUD_NACOS_USERNAME:nacos}
-        password: ${SPRING_CLOUD_NACOS_PASSWORD:nacos}
+        server-addr: 172.17.150.78:8848
+        namespace: public
+        username: nacos
+        password: Aa1231231212123
+        group: DEEPKNOW_GROUP

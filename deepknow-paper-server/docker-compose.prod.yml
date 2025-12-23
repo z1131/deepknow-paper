@@ -6,11 +6,6 @@ services:
     env_file:
       - /etc/deepknow.env
     environment:
-      # 使用内网 IP 连接 Nacos
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=172.17.150.78:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=172.17.150.78:8848
-      - SPRING_CLOUD_NACOS_USERNAME=nacos
-      - SPRING_CLOUD_NACOS_CONFIG_GROUP=DEEPKNOW_GROUP
       - TZ=Asia/Shanghai
     ports:
       - "8002:8002"
