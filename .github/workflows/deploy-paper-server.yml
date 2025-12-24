@@ -1,0 +1,73 @@
+name: Deploy Paper Server
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'paper-server/**'
+      - '.github/workflows/deploy-paper-server.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ${{ secrets.ACR_REGISTRY }}
+  IMAGE: ${{ secrets.ACR_NAMESPACE }}/paper-server
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./paper-server
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+
+      - name: Deploy to ECS
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ACR_REGISTRY: ${{ env.REGISTRY }}
+          ACR_IMAGE: ${{ env.IMAGE }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+        with:
+          host: ${{ secrets.ECS_1_HOST }}
+          username: ${{ secrets.ECS_1_USER }}
+          key: ${{ secrets.ECS_1_SSH_PRIVATE_KEY }}
+          envs: ACR_REGISTRY,ACR_IMAGE,ACR_USERNAME,ACR_PASSWORD
+          script: |
+            set -euo pipefail
+            
+            echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
+            docker pull $ACR_REGISTRY/$ACR_IMAGE:latest
+            
+            # 使用项目目录下的 docker-compose.prod.yml (假设你已经把文件放到了 ECS 的 /root/paper 目录下)
+            # 或者直接 docker run
+            docker stop paper-server || true
+            docker rm paper-server || true
+            docker run -d --name paper-server \
+              --restart unless-stopped \
+              --env-file /etc/deepknow.env \
+              -p 8002:8002 \
+              -p 20882:20882 \
+              -e SPRING_PROFILES_ACTIVE="sls" \
+              -e SLS_LOGSTORE="deepknow-paper" \
+              -e SERVER_PORT=8002 \
+              -e DUBBO_IP_TO_REGISTRY="172.17.150.78" \
+              $ACR_REGISTRY/$ACR_IMAGE:latest

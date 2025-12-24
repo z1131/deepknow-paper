@@ -13,7 +13,7 @@ export const API_CONFIG = {
     TIMEOUT: 10000,
 };
 
-export const getApiUrl = (service: string, version: string = 'v1') => {
-    // If we use /api prefix in portal routing, keep it here
-    return `${API_CONFIG.BASE_URL}/paper/${version}`;
+export const getApiUrl = (service: string) => {
+    // We point directly to the portal (via ALB)
+    return `${API_CONFIG.BASE_URL}/${service}`;
 };
