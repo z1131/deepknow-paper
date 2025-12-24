@@ -1,0 +1,59 @@
+name: Deploy Paper UI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'paper-ui/**'
+      - '.github/workflows/deploy-paper-ui.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ${{ secrets.ACR_REGISTRY }}
+  IMAGE: ${{ secrets.ACR_NAMESPACE }}/deepknow-paper-ui
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./paper-ui
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+
+      - name: Deploy to ECS
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ACR_REGISTRY: ${{ env.REGISTRY }}
+          ACR_IMAGE: ${{ env.IMAGE }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+        with:
+          host: ${{ secrets.ECS_1_HOST }}
+          username: ${{ secrets.ECS_1_USER }}
+          key: ${{ secrets.ECS_1_SSH_PRIVATE_KEY }}
+          envs: ACR_REGISTRY,ACR_IMAGE,ACR_USERNAME,ACR_PASSWORD
+          script: |
+            set -euo pipefail
+            
+            echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
+            docker pull $ACR_REGISTRY/$ACR_IMAGE:latest
+            docker stop paper-ui || true
+            docker rm paper-ui || true
+            docker run -d --name paper-ui \
+              --restart unless-stopped \
+              -e API_BASE="https://portal.deepknow.online" \
+              -e WS_BASE="wss://portal.deepknow.online" \
+              -p 81:80 \
+              $ACR_REGISTRY/$ACR_IMAGE:latest
