@@ -10,6 +10,10 @@
     <dependencies>
         <dependency>
             <groupId>com.deepknow</groupId>
+            <artifactId>paper-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.deepknow</groupId>
             <artifactId>paper-domain</artifactId>
         </dependency>
         <dependency>
