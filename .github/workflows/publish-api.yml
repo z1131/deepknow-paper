@@ -2,12 +2,8 @@ name: Publish paper-api to GitHub Packages
 
 on:
   push:
-    branches:
-      - main
-      - master
-    paths:
-      - 'paper-server/paper-api/**'
-      - 'paper-server/pom.xml'
+    # 只要 main 分支有推送就跑，不设任何 paths 限制，确保能看到结果
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -43,5 +39,4 @@ jobs:
           EOF
 
       - name: Publish paper-api
-        # 注意：此处必须进入父工程目录执行，指定子模块，确保依赖正确
         run: mvn -f paper-server/pom.xml -pl paper-api -am clean deploy -DskipTests
