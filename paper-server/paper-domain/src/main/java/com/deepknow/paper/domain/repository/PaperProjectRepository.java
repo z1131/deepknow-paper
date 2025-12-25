@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface PaperProjectRepository {
     List<PaperProject> findByUserId(Long userId);
+    PaperProject save(PaperProject project);
 }

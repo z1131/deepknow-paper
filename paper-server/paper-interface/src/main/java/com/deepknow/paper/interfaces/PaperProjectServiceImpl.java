@@ -18,4 +18,9 @@ public class PaperProjectServiceImpl implements PaperProjectService {
     public List<ProjectDTO> listProjects(Long userId) {
         return appService.listUserProjects(userId);
     }
+
+    @Override
+    public ProjectDTO createProject(Long userId) {
+        return appService.createProject(userId);
+    }
 }

@@ -22,6 +22,16 @@ public class PaperProjectAppService {
                 .collect(Collectors.toList());
     }
 
+    public ProjectDTO createProject(Long userId) {
+        PaperProject project = PaperProject.builder()
+                .userId(userId)
+                .status("DRAFT")
+                .build();
+        
+        PaperProject saved = repository.save(project);
+        return toDTO(saved);
+    }
+
     private ProjectDTO toDTO(PaperProject entity) {
         ProjectDTO dto = new ProjectDTO();
         dto.setId(entity.getId());

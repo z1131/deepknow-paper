@@ -28,6 +28,28 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public PaperProject save(PaperProject project) {
+        PaperProjectPO po = toPO(project);
+        if (po.getId() == null) {
+            mapper.insert(po);
+        } else {
+            mapper.updateById(po);
+        }
+        // Return entity with ID populated
+        return toEntity(po);
+    }
+
+    private PaperProjectPO toPO(PaperProject entity) {
+        PaperProjectPO po = new PaperProjectPO();
+        po.setId(entity.getId());
+        po.setUserId(entity.getUserId());
+        po.setTitle(entity.getTitle());
+        po.setAbstractText(entity.getAbstractText());
+        po.setStatus(entity.getStatus());
+        return po;
+    }
+
     private PaperProject toEntity(PaperProjectPO po) {
         return PaperProject.builder()
                 .id(po.getId())
