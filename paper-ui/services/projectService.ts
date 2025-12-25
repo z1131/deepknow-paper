@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getApiUrl } from './config';
 
-const API_BASE_URL = getApiUrl('core');
+const API_BASE_URL = getApiUrl('paper');
 
 export interface ProjectDTO {
   id: number;
