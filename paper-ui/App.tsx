@@ -1,52 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowNode } from './components/WorkflowNode';
+import LoginPage from './components/LoginPage';
 import { TopicSelectionView } from './views/TopicSelectionView';
 import { OutlineView } from './views/OutlineView';
 import { RefinementView } from './views/RefinementView';
 import { PaperTask, WorkflowStep } from './types';
-import { Check, Loader2, ArrowLeft } from 'lucide-react';
+import { Check, Loader2, ArrowLeft, LogOut, User } from 'lucide-react';
 import { projectService } from './services/projectService';
+import { authService } from './services/authService';
 
 const App: React.FC = () => {
+  // 认证状态
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 业务状态
   const [tasks, setTasks] = useState<PaperTask[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string>('');
   const [isOverviewMode, setIsOverviewMode] = useState(true);
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
+  const currentUser = authService.getCurrentUser();
+
+  // 初始化：检查登录状态
+  useEffect(() => {
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setIsLoading(false);
+
+      if (authenticated) {
+        loadProjects();
+      }
+    };
+
+    checkAuth();
+
+    // 监听认证状态变化事件
+    const handleUnauthorized = () => {
+      setIsAuthenticated(false);
+    };
+
+    const handleLogout = () => {
+      setIsAuthenticated(false);
+      setTasks([]);
+      setActiveTaskId('');
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    window.addEventListener('auth:logout', handleLogout);
+
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('auth:logout', handleLogout);
+    };
+  }, []);
 
   // Helper function to map project status to workflow step
   const mapStatusToStep = (status: string): WorkflowStep => {
     if (status === 'INIT' || status === 'TOPIC_GENERATING') return WorkflowStep.TOPIC_SELECTION;
     if (status === 'TOPIC_SELECTED') return WorkflowStep.OUTLINE_OVERVIEW;
-    // Add more mappings as needed
-    return WorkflowStep.TOPIC_SELECTION; // Default
+    return WorkflowStep.TOPIC_SELECTION;
   };
 
-  // Load projects on mount
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const projects = await projectService.listProjects(1001); // Default user
-        const loadedTasks: PaperTask[] = projects.map(p => ({
-          id: p.id.toString(),
-          title: p.title || '未命名论文',
-          currentStep: mapStatusToStep(p.status),
-          outline: [],
-          images: []
-        }));
-        setTasks(loadedTasks);
+  // 加载项目列表
+  const loadProjects = useCallback(async () => {
+    try {
+      const projects = await projectService.listProjects(); // 不再传 userId，由后端从 token 解析
+      const loadedTasks: PaperTask[] = projects.map(p => ({
+        id: p.id.toString(),
+        title: p.title || '未命名论文',
+        currentStep: mapStatusToStep(p.status),
+        outline: [],
+        images: []
+      }));
+      setTasks(loadedTasks);
 
-        // Auto-select the most recent project
-        if (loadedTasks.length > 0) {
-          setActiveTaskId(loadedTasks[0].id);
-        }
-      } catch (error) {
-        console.error('Failed to load projects:', error);
+      // Auto-select the most recent project
+      if (loadedTasks.length > 0) {
+        setActiveTaskId(loadedTasks[0].id);
       }
-    };
-    loadProjects();
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+    }
   }, []);
+
+  // 登录成功回调
+  const handleLoginSuccess = useCallback(() => {
+    setIsAuthenticated(true);
+    loadProjects();
+  }, [loadProjects]);
+
+  // 登出
+  const handleLogout = () => {
+    authService.logout();
+  };
 
   useEffect(() => {
     // When switching tasks, revert to overview mode
@@ -96,18 +145,15 @@ const App: React.FC = () => {
   const handleBack = () => {
     if (!activeTask) return;
     if (activeTask.currentStep === WorkflowStep.TOPIC_SELECTION) {
-      // If viewing a selected topic details, go back to generated list/form
       if (activeTask.selectedTopic) {
         updateTask(activeTask.id, { selectedTopic: undefined });
         return;
       }
-      // If in a specific mode (New/Existing) but not finalized, go back to mode selection cards
       if (activeTask.topicMode) {
         updateTask(activeTask.id, { topicMode: undefined });
         return;
       }
     }
-    // Default: Go back to workflow overview
     setIsOverviewMode(true);
   };
 
@@ -176,21 +222,19 @@ const App: React.FC = () => {
 
             return (
               <React.Fragment key={step.id}>
-                {/* Card Node */}
                 <div
                   onClick={() => !isLocked && handleStepClick(step.id)}
                   className={`
-                                    w-60 h-16 bg-white border rounded-md flex items-center justify-between px-4 py-2 transition-all duration-200
-                                    ${isActive
+                    w-60 h-16 bg-white border rounded-md flex items-center justify-between px-4 py-2 transition-all duration-200
+                    ${isActive
                       ? 'border-blue-500 border-dashed ring-2 ring-blue-50/50 shadow-sm z-10'
                       : isCompleted
                         ? 'border-green-500/30 hover:border-green-500 shadow-sm'
                         : 'border-gray-200 opacity-60 bg-gray-50/50'}
-                                    ${!isLocked ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
-                                `}
+                    ${!isLocked ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
+                  `}
                 >
                   <div className="flex items-center gap-3 w-full">
-                    {/* Icon State */}
                     <div className="shrink-0">
                       {isCompleted ? (
                         <div className="w-5 h-5 rounded-full bg-[#1a7f37] flex items-center justify-center text-white">
@@ -202,15 +246,12 @@ const App: React.FC = () => {
                         <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>
                       )}
                     </div>
-
-                    {/* Label */}
                     <span className={`font-semibold text-sm truncate ${isCompleted || isActive ? 'text-[#1f2328]' : 'text-gray-400'}`}>
                       {step.label}
                     </span>
                   </div>
                 </div>
 
-                {/* Connector Line */}
                 {idx < steps.length - 1 && (
                   <div className="flex items-center">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#d0d7de] -mr-0.5 z-0 relative"></div>
@@ -226,6 +267,21 @@ const App: React.FC = () => {
     );
   };
 
+  // 加载中
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <Loader2 className="text-blue-600 animate-spin" size={32} />
+      </div>
+    );
+  }
+
+  // 未登录 - 显示登录页
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // 已登录 - 显示主应用
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-white text-slate-800 font-sans">
       <Sidebar
@@ -276,6 +332,25 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* 用户信息下拉（右上角） */}
+      <div className="absolute top-4 right-4 flex items-center gap-3 bg-white rounded-lg shadow-sm border border-gray-200 px-3 py-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+            <User size={16} className="text-blue-600" />
+          </div>
+          <span className="text-sm font-medium text-gray-700">
+            {currentUser?.nickname || currentUser?.username || currentUser?.phone}
+          </span>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="text-gray-400 hover:text-red-500 transition-colors"
+          title="退出登录"
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </div>
   );
