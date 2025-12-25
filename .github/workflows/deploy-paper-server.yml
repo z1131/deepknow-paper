@@ -51,6 +51,7 @@ jobs:
           key: ${{ secrets[matrix.ssh_key] }}
           source: paper-server/docker-compose.prod.yml
           target: /root/deepknow-paper/paper-server
+          strip_components: 1
 
       - name: Deploy to ${{ matrix.host_key }}
         uses: appleboy/ssh-action@v1.0.3
@@ -69,4 +70,8 @@ jobs:
             cd /root/deepknow-paper/paper-server
             docker compose -f docker-compose.prod.yml pull
             export SERVICE_IP=$(hostname -I | awk '{print $1}')
+            
+            # 强制清理旧容器，避免命名冲突
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+            
             docker compose --env-file /etc/deepknow.env -f docker-compose.prod.yml up -d
