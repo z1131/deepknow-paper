@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowNode } from './components/WorkflowNode';
+import LoginModal from './components/LoginModal';
 import { TopicSelectionView } from './views/TopicSelectionView';
 import { OutlineView } from './views/OutlineView';
 import { RefinementView } from './views/RefinementView';
 import { PaperTask, WorkflowStep } from './types';
-import { Check, Loader2, ArrowLeft } from 'lucide-react';
+import { Check, Loader2, ArrowLeft, LogOut, User } from 'lucide-react';
 import { projectService } from './services/projectService';
+import { authService } from './services/authService';
 
 const App: React.FC = () => {
+  // 认证状态
+  const [user, setUser] = useState<any>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // 业务状态
   const [tasks, setTasks] = useState<PaperTask[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string>('');
   const [isOverviewMode, setIsOverviewMode] = useState(true);
@@ -19,37 +26,80 @@ const App: React.FC = () => {
   const mapStatusToStep = (status: string): WorkflowStep => {
     if (status === 'INIT' || status === 'TOPIC_GENERATING') return WorkflowStep.TOPIC_SELECTION;
     if (status === 'TOPIC_SELECTED') return WorkflowStep.OUTLINE_OVERVIEW;
-    // Add more mappings as needed
-    return WorkflowStep.TOPIC_SELECTION; // Default
+    return WorkflowStep.TOPIC_SELECTION;
   };
 
-  // Load projects on mount
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const projects = await projectService.listProjects(1001); // Default user
-        const loadedTasks: PaperTask[] = projects.map(p => ({
-          id: p.id.toString(),
-          title: p.title || '未命名论文',
-          currentStep: mapStatusToStep(p.status),
-          outline: [],
-          images: []
-        }));
-        setTasks(loadedTasks);
+  // 加载项目列表
+  const loadProjects = useCallback(async () => {
+    try {
+      const projects = await projectService.listProjects();
+      const loadedTasks: PaperTask[] = projects.map(p => ({
+        id: p.id.toString(),
+        title: p.title || '未命名论文',
+        currentStep: mapStatusToStep(p.status),
+        outline: [],
+        images: []
+      }));
+      setTasks(loadedTasks);
 
-        // Auto-select the most recent project
-        if (loadedTasks.length > 0) {
-          setActiveTaskId(loadedTasks[0].id);
-        }
-      } catch (error) {
-        console.error('Failed to load projects:', error);
+      if (loadedTasks.length > 0) {
+        setActiveTaskId(loadedTasks[0].id);
       }
-    };
-    loadProjects();
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+    }
   }, []);
 
+  // 初始化：检查登录状态
   useEffect(() => {
-    // When switching tasks, revert to overview mode
+    const checkAuth = () => {
+      const savedUser = authService.getCurrentUser();
+      const isAuthenticated = authService.isAuthenticated();
+
+      if (isAuthenticated && savedUser) {
+        setUser(savedUser);
+        loadProjects();
+      } else {
+        // 未登录，显示登录弹窗
+        setShowLoginModal(true);
+      }
+    };
+
+    checkAuth();
+
+    // 监听认证状态变化事件
+    const handleUnauthorized = () => {
+      setShowLoginModal(true);
+    };
+
+    const handleLogout = () => {
+      setUser(null);
+      setTasks([]);
+      setActiveTaskId('');
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    window.addEventListener('auth:logout', handleLogout);
+
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('auth:logout', handleLogout);
+    };
+  }, [loadProjects]);
+
+  // 登录成功回调
+  const handleLoginSuccess = useCallback((loggedInUser: any) => {
+    setUser(loggedInUser);
+    setShowLoginModal(false);
+    loadProjects();
+  }, [loadProjects]);
+
+  // 登出
+  const handleLogout = () => {
+    authService.logout();
+  };
+
+  useEffect(() => {
     setIsOverviewMode(true);
   }, [activeTaskId]);
 
@@ -92,22 +142,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Smart Back Navigation
   const handleBack = () => {
     if (!activeTask) return;
     if (activeTask.currentStep === WorkflowStep.TOPIC_SELECTION) {
-      // If viewing a selected topic details, go back to generated list/form
       if (activeTask.selectedTopic) {
         updateTask(activeTask.id, { selectedTopic: undefined });
         return;
       }
-      // If in a specific mode (New/Existing) but not finalized, go back to mode selection cards
       if (activeTask.topicMode) {
         updateTask(activeTask.id, { topicMode: undefined });
         return;
       }
     }
-    // Default: Go back to workflow overview
     setIsOverviewMode(true);
   };
 
@@ -120,7 +166,6 @@ const App: React.FC = () => {
     return "返回流程图";
   };
 
-  // Render content based on current workflow step
   const renderContent = () => {
     if (!activeTask) return null;
     switch (activeTask.currentStep) {
@@ -176,21 +221,19 @@ const App: React.FC = () => {
 
             return (
               <React.Fragment key={step.id}>
-                {/* Card Node */}
                 <div
                   onClick={() => !isLocked && handleStepClick(step.id)}
                   className={`
-                                    w-60 h-16 bg-white border rounded-md flex items-center justify-between px-4 py-2 transition-all duration-200
-                                    ${isActive
+                    w-60 h-16 bg-white border rounded-md flex items-center justify-between px-4 py-2 transition-all duration-200
+                    ${isActive
                       ? 'border-blue-500 border-dashed ring-2 ring-blue-50/50 shadow-sm z-10'
                       : isCompleted
                         ? 'border-green-500/30 hover:border-green-500 shadow-sm'
                         : 'border-gray-200 opacity-60 bg-gray-50/50'}
-                                    ${!isLocked ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
-                                `}
+                    ${!isLocked ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
+                  `}
                 >
                   <div className="flex items-center gap-3 w-full">
-                    {/* Icon State */}
                     <div className="shrink-0">
                       {isCompleted ? (
                         <div className="w-5 h-5 rounded-full bg-[#1a7f37] flex items-center justify-center text-white">
@@ -202,15 +245,12 @@ const App: React.FC = () => {
                         <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>
                       )}
                     </div>
-
-                    {/* Label */}
                     <span className={`font-semibold text-sm truncate ${isCompleted || isActive ? 'text-[#1f2328]' : 'text-gray-400'}`}>
                       {step.label}
                     </span>
                   </div>
                 </div>
 
-                {/* Connector Line */}
                 {idx < steps.length - 1 && (
                   <div className="flex items-center">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#d0d7de] -mr-0.5 z-0 relative"></div>
@@ -228,6 +268,13 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-white text-slate-800 font-sans">
+      {/* 登录弹窗 */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onLoginSuccess={handleLoginSuccess}
+      />
+
+      {/* 主应用 */}
       <Sidebar
         tasks={tasks}
         activeTaskId={activeTaskId}
@@ -236,13 +283,13 @@ const App: React.FC = () => {
       />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Top Navigation - Only show if not in overview mode */}
+        {/* Top Navigation */}
         {!isOverviewMode && activeTask && (
-          <div className="h-16 bg-white border-b border-gray-200 flex items-center px-8 shadow-sm justify-between z-10 animate-fade-in-down">
+          <div className="h-16 bg-white border-b border-gray-200 flex items-center px-8 shadow-sm justify-between z-10">
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBack}
-                className="text-gray-500 hover:text-blue-600 font-medium text-sm flex items-center gap-1 transition-colors"
+                className="text-gray-500 hover:text-blue-600 font-medium text-sm flex items-center gap-1"
               >
                 <ArrowLeft size={16} />
                 {getBackLabel()}
@@ -269,7 +316,7 @@ const App: React.FC = () => {
               <p className="text-lg mb-4">暂无项目，请先创建</p>
               <button
                 onClick={addTask}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md"
               >
                 新建论文项目
               </button>
@@ -277,6 +324,36 @@ const App: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* 用户信息区域（右上角） */}
+      {user && (
+        <div className="absolute top-4 right-4 flex items-center gap-2 bg-white rounded-lg shadow-sm border border-gray-200 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+              {user.avatar ? (
+                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <User size={16} className="text-blue-600" />
+              )}
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-sm font-medium text-gray-700 leading-tight">
+                {user.username}
+              </span>
+              {user.isGuest && (
+                <span className="text-xs text-gray-400">访客模式</span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-gray-400 hover:text-red-500 transition-colors ml-2"
+            title="退出登录"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

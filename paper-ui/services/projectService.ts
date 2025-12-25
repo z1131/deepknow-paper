@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from './axios';
 import { getApiUrl } from './config';
 
 const API_BASE_URL = getApiUrl('api/paper');
@@ -26,7 +26,7 @@ export const projectService = {
   },
 
   async getProject(id: string): Promise<ProjectDTO> {
-    const response = await axios.get(`${API_BASE_URL}/projects/${id}`);
+    const response = await axiosInstance.get(`${API_BASE_URL}/projects/${id}`);
     return response.data.data;
   },
 
@@ -35,7 +35,7 @@ export const projectService = {
       const url = userId
         ? `${API_BASE_URL}/projects?userId=${userId}`
         : `${API_BASE_URL}/projects`;
-      const response = await axios.get(url);
+      const response = await axiosInstance.get(url);
       if (response.data && response.data.code === 200) {
         return response.data.data;
       }
