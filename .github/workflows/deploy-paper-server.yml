@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ${{ secrets.ACR_REGISTRY }}
-  IMAGE: ${{ secrets.ACR_NAMESPACE }}/paper-server
+  IMAGE: ${{ secrets.ACR_NAMESPACE }}/deepknow-paper-server
 
 jobs:
   build_and_push:
