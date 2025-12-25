@@ -111,6 +111,13 @@
                 <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
+
+            <!-- Protobuf (Required for Dubbo Triple) -->
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>3.22.3</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
