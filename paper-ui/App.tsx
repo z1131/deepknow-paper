@@ -27,7 +27,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const projects = await projectService.listProjects(1001); // Default user
+        const projects = await projectService.listProjects();
         const loadedTasks: PaperTask[] = projects.map(p => ({
           id: p.id.toString(),
           title: p.title || '未命名论文',
