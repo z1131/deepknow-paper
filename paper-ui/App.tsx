@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowNode } from './components/WorkflowNode';
 import { TopicSelectionView } from './views/TopicSelectionView';
@@ -8,11 +8,13 @@ import { PaperTask, WorkflowStep } from './types';
 import { Check, Loader2, ArrowLeft } from 'lucide-react';
 import { projectService } from './services/projectService';
 import { authService } from './services/authService';
+import { LoginModal } from './components/LoginModal';
 
 const App: React.FC = () => {
   const [tasks, setTasks] = useState<PaperTask[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string>('');
   const [isOverviewMode, setIsOverviewMode] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
 
@@ -24,36 +26,51 @@ const App: React.FC = () => {
     return WorkflowStep.TOPIC_SELECTION; // Default
   };
 
-  // Load projects on mount
-  useEffect(() => {
-    const initAndLoadProjects = async () => {
-      try {
-        // Ensure user is authenticated
-        if (!authService.isAuthenticated()) {
-          console.log("Not authenticated, attempting guest login...");
-          await authService.guestLogin();
-        }
-
-        const projects = await projectService.listProjects();
-        const loadedTasks: PaperTask[] = projects.map(p => ({
-          id: p.id.toString(),
-          title: p.title || '未命名论文',
-          currentStep: mapStatusToStep(p.status),
-          outline: [],
-          images: []
-        }));
-        setTasks(loadedTasks);
-
-        // Auto-select the most recent project
-        if (loadedTasks.length > 0) {
-          setActiveTaskId(loadedTasks[0].id);
-        }
-      } catch (error) {
-        console.error('Failed to initialize or load projects:', error);
+  const loadProjects = useCallback(async () => {
+    try {
+      if (!authService.isAuthenticated()) {
+        setIsLoginModalOpen(true);
+        return;
       }
+
+      const projects = await projectService.listProjects();
+      const loadedTasks: PaperTask[] = projects.map(p => ({
+        id: p.id.toString(),
+        title: p.title || '未命名论文',
+        currentStep: mapStatusToStep(p.status),
+        outline: [],
+        images: []
+      }));
+      setTasks(loadedTasks);
+
+      // Auto-select the most recent project if none selected
+      if (loadedTasks.length > 0 && !activeTaskId) {
+        setActiveTaskId(loadedTasks[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+    }
+  }, [activeTaskId]);
+
+  // Initial load and event listeners
+  useEffect(() => {
+    loadProjects();
+
+    const handleUnauthorized = () => setIsLoginModalOpen(true);
+    const handleLogout = () => {
+      setTasks([]);
+      setActiveTaskId('');
+      setIsLoginModalOpen(true);
     };
-    initAndLoadProjects();
-  }, []);
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    window.addEventListener('auth:logout', handleLogout);
+
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('auth:logout', handleLogout);
+    };
+  }, [loadProjects]);
 
   useEffect(() => {
     // When switching tasks, revert to overview mode
@@ -284,6 +301,12 @@ const App: React.FC = () => {
           )}
         </div>
       </div>
+
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={loadProjects}
+      />
     </div>
   );
 };
