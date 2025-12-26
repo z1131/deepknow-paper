@@ -1,8 +1,8 @@
-import axiosInstance from './axios';
+import axios from 'axios';
 import { getApiUrl } from './config';
 
 // API Base URL
-const API_BASE_URL = getApiUrl('api/paper');
+const API_BASE_URL = getApiUrl('core');
 
 export interface TopicCandidate {
     title: string;
@@ -25,7 +25,7 @@ export const topicService = {
      */
     async generateTopics(projectId: number, initialIdea: string): Promise<TopicCandidate[]> {
         try {
-            const response = await axiosInstance.post(`${API_BASE_URL}/projects/${projectId}/topics/generate`, {
+            const response = await axios.post(`${API_BASE_URL}/projects/${projectId}/topics/generate`, {
                 initialIdea
             });
 
@@ -48,7 +48,7 @@ export const topicService = {
         formData.append('topicTitle', topicTitle);
 
         try {
-            const response = await axiosInstance.post(`${API_BASE_URL}/projects/${projectId}/topics/analyze`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/projects/${projectId}/topics/analyze`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -62,7 +62,7 @@ export const topicService = {
 
     async confirmTopic(projectId: number, title: string, candidateId?: number): Promise<boolean> {
         try {
-            const response = await axiosInstance.post(`${API_BASE_URL}/projects/${projectId}/topics/confirm`, {
+            const response = await axios.post(`${API_BASE_URL}/projects/${projectId}/topics/confirm`, {
                 title,
                 candidateId
             });
