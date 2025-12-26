@@ -3,6 +3,7 @@
  * 处理登录、登出、发送验证码等操作
  */
 import axiosInstance, { tokenManager } from './axios';
+import axios from 'axios';
 import { getApiUrl } from './config';
 import type {
   SendCodeResponse,
