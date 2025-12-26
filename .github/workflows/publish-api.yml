@@ -2,8 +2,10 @@ name: Publish paper-api to GitHub Packages
 
 on:
   push:
-    # 只要 main 分支有推送就跑，不设任何 paths 限制，确保能看到结果
     branches: [main, master]
+    paths:
+      - 'paper-server/paper-api/**'
+      - 'paper-server/pom.xml'
   workflow_dispatch:
 
 jobs:
