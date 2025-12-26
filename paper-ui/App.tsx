@@ -7,6 +7,7 @@ import { RefinementView } from './views/RefinementView';
 import { PaperTask, WorkflowStep } from './types';
 import { Check, Loader2, ArrowLeft } from 'lucide-react';
 import { projectService } from './services/projectService';
+import { authService } from './services/authService';
 
 const App: React.FC = () => {
   const [tasks, setTasks] = useState<PaperTask[]>([]);
@@ -25,8 +26,14 @@ const App: React.FC = () => {
 
   // Load projects on mount
   useEffect(() => {
-    const loadProjects = async () => {
+    const initAndLoadProjects = async () => {
       try {
+        // Ensure user is authenticated
+        if (!authService.isAuthenticated()) {
+          console.log("Not authenticated, attempting guest login...");
+          await authService.guestLogin();
+        }
+
         const projects = await projectService.listProjects();
         const loadedTasks: PaperTask[] = projects.map(p => ({
           id: p.id.toString(),
@@ -42,10 +49,10 @@ const App: React.FC = () => {
           setActiveTaskId(loadedTasks[0].id);
         }
       } catch (error) {
-        console.error('Failed to load projects:', error);
+        console.error('Failed to initialize or load projects:', error);
       }
     };
-    loadProjects();
+    initAndLoadProjects();
   }, []);
 
   useEffect(() => {
