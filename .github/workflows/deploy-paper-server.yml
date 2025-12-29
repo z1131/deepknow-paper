@@ -5,13 +5,13 @@ on:
     branches: [main, master]
     paths:
       - '.github/workflows/deploy-paper-server.yml'
-      - 'deepknow-paper/paper-server/**'
-      - 'deepknow-paper/pom.xml'
-      - 'deepknow-paper/paper-api/**'
-      - 'deepknow-paper/paper-domain/**'
-      - 'deepknow-paper/paper-infrastructure/**'
-      - 'deepknow-paper/paper-interface/**'
-      - 'deepknow-paper/paper-application/**'
+      - 'paper-server/**'
+      - 'pom.xml'
+      - 'paper-api/**'
+      - 'paper-domain/**'
+      - 'paper-infrastructure/**'
+      - 'paper-interface/**'
+      - 'paper-application/**'
   workflow_dispatch:
 
 env:
@@ -41,8 +41,8 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v6
         with:
-          context: ./deepknow-paper
-          file: ./deepknow-paper/paper-server/Dockerfile
+          context: .
+          file: ./paper-server/Dockerfile
           push: true
           # Use env vars for consistency
           tags: ${{ env.ACR_REGISTRY }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
@@ -65,8 +65,8 @@ jobs:
           host: ${{ secrets[matrix.host_key] }}
           username: ${{ secrets[matrix.user_key] }}
           key: ${{ secrets[matrix.ssh_key_name] }}
-          source: "deepknow-paper/paper-server/docker-compose.prod.yml"
-          target: "/root"
+          source: "paper-server/docker-compose.prod.yml"
+          target: "/root/deepknow-paper"
           
       - name: Execute Deployment
         uses: appleboy/ssh-action@v1.0.3
@@ -89,9 +89,11 @@ jobs:
             mkdir -p $DEPLOY_DIR
             
             # Move uploaded compose file to correct location (flattening path)
+            # scp with target="/root/deepknow-paper" uploads paper-server/docker-compose.prod.yml inside it
             if [ -f "/root/deepknow-paper/paper-server/docker-compose.prod.yml" ]; then
+                # File is already in the right place because of scp structure, just ensure permissions
+                chmod 644 /root/deepknow-paper/paper-server/docker-compose.prod.yml
                 mv /root/deepknow-paper/paper-server/docker-compose.prod.yml $DEPLOY_DIR/docker-compose.prod.yml
-                rm -rf /root/deepknow-paper # cleanup temp upload dir
             fi
             
             cd $DEPLOY_DIR
