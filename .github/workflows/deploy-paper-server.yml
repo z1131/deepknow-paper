@@ -41,7 +41,7 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./paper-server
           file: ./paper-server/Dockerfile
           push: true
           # Use env vars for consistency
