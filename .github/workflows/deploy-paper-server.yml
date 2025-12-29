@@ -56,6 +56,9 @@ jobs:
           - host_key: ECS_1_HOST
             user_key: ECS_1_USER
             ssh_key_name: ECS_1_SSH_PRIVATE_KEY
+          - host_key: ECS_2_HOST
+            user_key: ECS_2_USER
+            ssh_key_name: ECS_2_SSH_PRIVATE_KEY
     steps:
       - uses: actions/checkout@v4
 
