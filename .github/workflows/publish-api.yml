@@ -1,9 +1,10 @@
-name: Publish paper-api to GitHub Packages
+name: Publish paper-api
 
 on:
   push:
     branches: [main, master]
     paths:
+      - '.github/workflows/publish-api.yml'
       - 'paper-server/paper-api/**'
       - 'paper-server/pom.xml'
   workflow_dispatch:
@@ -16,7 +17,7 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -24,21 +25,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Configure Maven settings
-        run: |
-          mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml <<EOF
-          <settings>
-            <servers>
-              <server>
-                <id>github</id>
-                <username>${{ github.actor }}</username>
-                <password>${{ secrets.PACKAGES_DEPLOY_TOKEN }}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
+          server-id: github # Must match <id>github</id> in pom.xml distributionManagement
+          settings-path: ${{ github.workspace }}
 
       - name: Publish paper-api
-        run: mvn -f paper-server/pom.xml -pl paper-api -am clean deploy -DskipTests
+        run: mvn -f paper-server/pom.xml -pl paper-api -am clean deploy -DskipTests -s ${{ github.workspace }}/settings.xml
+        env:
+          # Use the built-in GITHUB_TOKEN which has write:packages permission
+          # mapped to the server-id 'github' via setup-java
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

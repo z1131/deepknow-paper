@@ -15,6 +15,8 @@ export const projectService = {
   async createProject(): Promise<ProjectDTO> {
     try {
       const response = await axios.post(`${API_BASE_URL}/projects`);
+      
+      // Handle standardized wrapped response
       if (response.data && response.data.code === 200) {
         return response.data.data;
       }
@@ -34,6 +36,8 @@ export const projectService = {
     try {
       const url = `${API_BASE_URL}/projects`;
       const response = await axios.get(url);
+      
+      // Handle standardized wrapped response
       if (response.data && response.data.code === 200) {
         return response.data.data;
       }
