@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   paper-server:
-    image: ${ACR_REGISTRY}/deepknow/paper-server:latest
+    image: ${DOCKER_IMAGE}
     container_name: paper-server
     restart: unless-stopped
     env_file:
@@ -11,10 +11,9 @@ services:
       - "20882:20882"
     environment:
       TZ: Asia/Shanghai
-      JAVA_OPTS: "-Xms256m -Xmx512m"
+      JAVA_OPTS: "-Xms512m -Xmx1024m"
       SERVER_PORT: 8002
-      # 启用 SLS 日志
-      SPRING_PROFILES_ACTIVE: "sls"
-      SLS_LOGSTORE: "deepknow-paper"
-      # Dubbo 注册 IP
-      DUBBO_IP_TO_REGISTRY: ${SERVICE_IP:-172.17.150.78}
+      SPRING_PROFILES_ACTIVE: "prod"
+      DUBBO_IP_TO_REGISTRY: ${SERVICE_IP}
+    volumes:
+      - ./logs:/root/logs
