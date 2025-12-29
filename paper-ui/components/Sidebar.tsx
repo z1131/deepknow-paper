@@ -91,10 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ tasks, activeTaskId, onSelectT
                 <span>设置</span>
             </button>
             
-            <div className="px-4 py-2 flex items-center gap-2 text-[11px] text-[#444746] font-medium mt-1">
-                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                 DeepWrite • 北京
-            </div>
+            <p className="text-xs text-gray-400 mt-1">DeepKnow Paper • 北京</p>
           </div>
         </>
       )}

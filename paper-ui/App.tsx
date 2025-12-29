@@ -183,68 +183,71 @@ const App: React.FC = () => {
 
   const renderWorkflowMap = () => {
     if (!activeTask) return null;
-    const steps = [
-      { id: WorkflowStep.TOPIC_SELECTION, label: "选题" },
-      { id: WorkflowStep.OUTLINE_OVERVIEW, label: "大纲及概述" },
-      { id: WorkflowStep.DRAFTING, label: "文本内容撰写" },
-      { id: WorkflowStep.REFINEMENT, label: "精修" }
-    ];
+
+    const renderStepCard = (stepId: WorkflowStep, label: string, isSoul: boolean = false) => {
+      const isActive = activeTask.currentStep === stepId;
+      const isCompleted = activeTask.currentStep > stepId;
+      const isLocked = activeTask.currentStep < stepId;
+
+      return (
+        <div
+          key={stepId}
+          onClick={() => !isLocked && handleStepClick(stepId)}
+          className={`
+            w-64 h-20 bg-white border rounded-xl flex items-center justify-between px-5 py-3 transition-all duration-200
+            ${isActive
+              ? 'border-blue-500 border-dashed ring-4 ring-blue-50/50 shadow-md z-10 scale-105'
+              : isCompleted
+                ? 'border-green-500/30 hover:border-green-500 shadow-sm'
+                : 'border-gray-200 opacity-60 bg-gray-50/50'}
+            ${!isLocked ? 'cursor-pointer hover:shadow-lg' : 'cursor-not-allowed'}
+            ${isSoul ? 'ring-2 ring-amber-100 border-amber-200 bg-gradient-to-br from-white to-amber-50/30' : ''}
+          `}
+        >
+          <div className="flex items-center gap-4 w-full">
+            <div className="shrink-0">
+              {isCompleted ? (
+                <div className="w-6 h-6 rounded-full bg-[#1a7f37] flex items-center justify-center text-white">
+                  <Check size={14} strokeWidth={4} />
+                </div>
+              ) : isActive ? (
+                <Loader2 className="text-[#0969da] animate-spin" size={24} strokeWidth={2.5} />
+              ) : (
+                <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+              )}
+            </div>
+
+            <div className="flex flex-col overflow-hidden text-left">
+              <span className={`font-bold text-sm uppercase tracking-wider ${isSoul ? 'text-amber-600' : 'text-gray-400'}`}>
+                {isSoul ? '核心基石' : 'AI 执行'}
+              </span>
+              <span className={`font-extrabold text-base truncate ${isCompleted || isActive ? 'text-[#1f2328]' : 'text-gray-400'}`}>
+                {label}
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     return (
       <div className="h-full flex items-center justify-center bg-[#f6f8fa] overflow-auto">
-        <div className="flex items-center min-w-max p-10">
-          {steps.map((step, idx) => {
-            const isActive = activeTask.currentStep === step.id;
-            const isCompleted = activeTask.currentStep > step.id;
-            const isLocked = activeTask.currentStep < step.id;
+        <div className="flex flex-col items-center gap-16 p-10">
+          {/* Top: The Soul (Topic Selection) */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">确立论文灵魂</div>
+            {renderStepCard(WorkflowStep.TOPIC_SELECTION, "选题", true)}
+          </div>
 
-            return (
-              <React.Fragment key={step.id}>
-                {/* Card Node */}
-                <div
-                  onClick={() => !isLocked && handleStepClick(step.id)}
-                  className={`
-                                    w-60 h-16 bg-white border rounded-md flex items-center justify-between px-4 py-2 transition-all duration-200
-                                    ${isActive
-                      ? 'border-blue-500 border-dashed ring-2 ring-blue-50/50 shadow-sm z-10'
-                      : isCompleted
-                        ? 'border-green-500/30 hover:border-green-500 shadow-sm'
-                        : 'border-gray-200 opacity-60 bg-gray-50/50'}
-                                    ${!isLocked ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
-                                `}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    {/* Icon State */}
-                    <div className="shrink-0">
-                      {isCompleted ? (
-                        <div className="w-5 h-5 rounded-full bg-[#1a7f37] flex items-center justify-center text-white">
-                          <Check size={12} strokeWidth={4} />
-                        </div>
-                      ) : isActive ? (
-                        <Loader2 className="text-[#0969da] animate-spin" size={20} strokeWidth={2.5} />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>
-                      )}
-                    </div>
-
-                    {/* Label */}
-                    <span className={`font-semibold text-sm truncate ${isCompleted || isActive ? 'text-[#1f2328]' : 'text-gray-400'}`}>
-                      {step.label}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Connector Line */}
-                {idx < steps.length - 1 && (
-                  <div className="flex items-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#d0d7de] -mr-0.5 z-0 relative"></div>
-                    <div className="w-12 h-0.5 bg-[#d0d7de]"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#d0d7de] -ml-0.5 z-0 relative"></div>
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
+          {/* Bottom: The AI Execution Engine */}
+          <div className="flex flex-col items-center gap-6">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">AI 辅助生产流水线</div>
+            <div className="flex items-start gap-8">
+              {renderStepCard(WorkflowStep.OUTLINE_OVERVIEW, "大纲及概述")}
+              {renderStepCard(WorkflowStep.DRAFTING, "文本内容撰写")}
+              {renderStepCard(WorkflowStep.REFINEMENT, "精修")}
+            </div>
+          </div>
         </div>
       </div>
     );

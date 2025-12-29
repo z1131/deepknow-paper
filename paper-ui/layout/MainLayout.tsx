@@ -36,8 +36,7 @@ const MainLayout: React.FC = () => {
       <div className={`${isSidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 bg-white border-r flex flex-col`}>
         <div className="p-4 border-b flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">DW</div>
-          <span className="font-bold text-xl text-gray-800 overflow-hidden whitespace-nowrap">DeepWrite</span>
-        </div>
+                      <span className="font-bold text-xl text-gray-800 overflow-hidden whitespace-nowrap">Paper</span>        </div>
         
         <div className="flex-1 overflow-y-auto py-4">
           <div className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
