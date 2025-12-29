@@ -43,7 +43,7 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
         po.setUserId(entity.getUserId());
         po.setTitle(entity.getTitle());
         po.setAbstractText(entity.getAbstractText());
-        po.setStatus(entity.getStatus());
+        po.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
         po.setCreateTime(entity.getCreateTime());
         po.setUpdateTime(LocalDateTime.now());
         return po;
@@ -56,7 +56,7 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
                 .userId(po.getUserId())
                 .title(po.getTitle())
                 .abstractText(po.getAbstractText())
-                .status(po.getStatus())
+                .statusStr(po.getStatus())
                 .createTime(po.getCreateTime())
                 .build();
     }
