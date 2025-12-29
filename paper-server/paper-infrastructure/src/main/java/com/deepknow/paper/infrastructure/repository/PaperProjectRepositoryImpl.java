@@ -1,6 +1,5 @@
 package com.deepknow.paper.infrastructure.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.deepknow.paper.domain.model.PaperProject;
 import com.deepknow.paper.domain.repository.PaperProjectRepository;
 import com.deepknow.paper.infrastructure.repository.mapper.PaperProjectMapper;
@@ -8,6 +7,7 @@ import com.deepknow.paper.infrastructure.repository.po.PaperProjectPO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,11 +19,7 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
 
     @Override
     public List<PaperProject> findByUserId(Long userId) {
-        LambdaQueryWrapper<PaperProjectPO> query = new LambdaQueryWrapper<>();
-        query.eq(PaperProjectPO::getUserId, userId)
-             .orderByDesc(PaperProjectPO::getCreateTime);
-             
-        return mapper.selectList(query).stream()
+        return mapper.selectByUserId(userId).stream()
                 .map(this::toEntity)
                 .collect(Collectors.toList());
     }
@@ -34,9 +30,10 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
         if (po.getId() == null) {
             mapper.insert(po);
         } else {
+            po.setUpdateTime(LocalDateTime.now());
             mapper.updateById(po);
         }
-        // Return entity with ID populated
+        // Return entity with ID populated (MyBatis sets generated key back into PO)
         return toEntity(po);
     }
 
@@ -47,10 +44,13 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
         po.setTitle(entity.getTitle());
         po.setAbstractText(entity.getAbstractText());
         po.setStatus(entity.getStatus());
+        po.setCreateTime(entity.getCreateTime());
+        po.setUpdateTime(LocalDateTime.now());
         return po;
     }
 
     private PaperProject toEntity(PaperProjectPO po) {
+        if (po == null) return null;
         return PaperProject.builder()
                 .id(po.getId())
                 .userId(po.getUserId())

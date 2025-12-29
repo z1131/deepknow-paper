@@ -26,6 +26,7 @@ public class PaperProjectAppService {
         PaperProject project = PaperProject.builder()
                 .userId(userId)
                 .status("DRAFT")
+                .createTime(java.time.LocalDateTime.now())
                 .build();
         
         PaperProject saved = repository.save(project);
