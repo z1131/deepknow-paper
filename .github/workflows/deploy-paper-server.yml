@@ -51,18 +51,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - host: ${{ secrets.ECS_1_HOST }}
-            user: ${{ secrets.ECS_1_USER }}
-            key: ${{ secrets.ECS_1_SSH_PRIVATE_KEY }}
+          - host_key: ECS_1_HOST
+            user_key: ECS_1_USER
+            ssh_key_name: ECS_1_SSH_PRIVATE_KEY
     steps:
       - uses: actions/checkout@v4
 
       - name: Upload Compose File
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ matrix.host }}
-          username: ${{ matrix.user }}
-          key: ${{ matrix.key }}
+          host: ${{ secrets[matrix.host_key] }}
+          username: ${{ secrets[matrix.user_key] }}
+          key: ${{ secrets[matrix.ssh_key_name] }}
           source: "deepknow-paper/paper-server/docker-compose.prod.yml"
           target: "/root"
           
@@ -75,9 +75,9 @@ jobs:
           DOCKER_IMAGE: ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
           DEPLOY_DIR: ${{ env.DEPLOY_DIR }}
         with:
-          host: ${{ matrix.host }}
-          username: ${{ matrix.user }}
-          key: ${{ matrix.key }}
+          host: ${{ secrets[matrix.host_key] }}
+          username: ${{ secrets[matrix.user_key] }}
+          key: ${{ secrets[matrix.ssh_key_name] }}
           envs: ACR_REGISTRY,ACR_USERNAME,ACR_PASSWORD,DOCKER_IMAGE,DEPLOY_DIR
           script: |
             set -e
