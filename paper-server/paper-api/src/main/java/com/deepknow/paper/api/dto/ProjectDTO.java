@@ -19,8 +19,8 @@ public class ProjectDTO implements Serializable {
     public void setUserId(Long userId) { this.userId = userId; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-    public String getAbstractText() { return abstractText; }
-    public void setAbstractText(String abstractText) { this.abstractText = abstractText; }
+    public String getTopicOverview() { return topicOverview; }
+    public void setTopicOverview(String topicOverview) { this.topicOverview = topicOverview; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreateTime() { return createTime; }
