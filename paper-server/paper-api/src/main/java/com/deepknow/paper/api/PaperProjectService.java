@@ -4,13 +4,9 @@ import com.deepknow.paper.api.dto.ProjectDTO;
 import java.util.List;
 
 public interface PaperProjectService {
-    /**
-     * 获取用户的论文项目列表
-     */
     List<ProjectDTO> listProjects(Long userId);
-
-    /**
-     * 创建新的论文项目
-     */
     ProjectDTO createProject(Long userId);
+    ProjectDTO getProject(Long projectId, Long userId);
+    ProjectDTO confirmTopic(Long projectId, Long userId, String title, String overview);
+    ProjectDTO uploadReferenceDoc(Long projectId, Long userId, String fileName, String content);
 }

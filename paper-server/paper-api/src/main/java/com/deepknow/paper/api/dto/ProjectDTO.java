@@ -9,7 +9,7 @@ public class ProjectDTO implements Serializable {
     private Long id;
     private Long userId;
     private String title;
-    private String abstractText;
+    private String topicOverview;
     private String status; // Keep as String for API compatibility
     private LocalDateTime createTime;
 

@@ -1,11 +1,12 @@
 package com.deepknow.paper.application;
 
 import com.deepknow.paper.api.dto.ProjectDTO;
-import com.deepknow.paper.domain.model.PaperProject;
-import com.deepknow.paper.domain.model.enums.ProjectStatus;
-import com.deepknow.paper.domain.repository.PaperProjectRepository;
+import com.deepknow.paper.domain.context.model.PaperProject;
+import com.deepknow.paper.domain.context.model.enums.ProjectStatus;
+import com.deepknow.paper.domain.context.repository.PaperProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,25 +37,32 @@ public class PaperProjectAppService {
     }
 
     public ProjectDTO getProject(Long projectId, Long userId) {
-        // Simple mock/placeholder: Find all and filter (production should use repository.findById)
-        return listUserProjects(userId).stream()
-                .filter(p -> p.getId().equals(projectId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        PaperProject project = repository.findById(projectId);
+        if (project == null || !project.getUserId().equals(userId)) {
+            throw new RuntimeException("Project not found or unauthorized");
+        }
+        return toDTO(project);
     }
 
     public ProjectDTO confirmTopic(Long projectId, Long userId, String title, String overview) {
-        // 1. 加载领域对象 (这里先用简单的列表过滤，实际应增加 findById)
-        List<PaperProject> projects = repository.findByUserId(userId);
-        PaperProject project = projects.stream()
-                .filter(p -> p.getId().equals(projectId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("项目不存在或无权操作"));
+        PaperProject project = repository.findById(projectId);
+        if (project == null || !project.getUserId().equals(userId)) {
+            throw new RuntimeException("Project not found or unauthorized");
+        }
 
-        // 2. 执行领域动作
         project.confirmTopic(title, overview);
+        PaperProject saved = repository.save(project);
+        return toDTO(saved);
+    }
 
-        // 3. 持久化
+    @Transactional
+    public ProjectDTO uploadReferenceDoc(Long projectId, Long userId, String fileName, String content) {
+        PaperProject project = repository.findById(projectId);
+        if (project == null || !project.getUserId().equals(userId)) {
+            throw new RuntimeException("Project not found or unauthorized");
+        }
+
+        project.addReferenceDoc(fileName, content);
         PaperProject saved = repository.save(project);
         return toDTO(saved);
     }
@@ -64,7 +72,7 @@ public class PaperProjectAppService {
         dto.setId(entity.getId());
         dto.setUserId(entity.getUserId());
         dto.setTitle(entity.getTitle());
-        dto.setAbstractText(entity.getAbstractText());
+        dto.setTopicOverview(entity.getTopicOverview());
         dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
         dto.setCreateTime(entity.getCreateTime());
         return dto;

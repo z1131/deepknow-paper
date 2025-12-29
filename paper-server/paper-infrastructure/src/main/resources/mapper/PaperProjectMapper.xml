@@ -6,7 +6,7 @@
         <id column="id" property="id" />
         <result column="user_id" property="userId" />
         <result column="title" property="title" />
-        <result column="abstract_text" property="abstractText" />
+        <result column="topic_overview" property="topicOverview" />
         <result column="status" property="status" />
         <result column="is_deleted" property="isDeleted" />
         <result column="create_time" property="createTime" />
@@ -14,19 +14,19 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, user_id, title, abstract_text, status, is_deleted, create_time, update_time
+        id, user_id, title, topic_overview, status, is_deleted, create_time, update_time
     </sql>
 
     <insert id="insert" parameterType="com.deepknow.paper.infrastructure.repository.po.PaperProjectPO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO paper_project (user_id, title, abstract_text, status, is_deleted, create_time, update_time)
-        VALUES (#{userId}, #{title}, #{abstractText}, #{status}, 0, #{createTime}, #{updateTime})
+        INSERT INTO paper_project (user_id, title, topic_overview, status, is_deleted, create_time, update_time)
+        VALUES (#{userId}, #{title}, #{topicOverview}, #{status}, 0, #{createTime}, #{updateTime})
     </insert>
 
     <update id="updateById" parameterType="com.deepknow.paper.infrastructure.repository.po.PaperProjectPO">
         UPDATE paper_project
         <set>
             <if test="title != null">title = #{title},</if>
-            <if test="abstractText != null">abstract_text = #{abstractText},</if>
+            <if test="topicOverview != null">topic_overview = #{topicOverview},</if>
             <if test="status != null">status = #{status},</if>
             <if test="updateTime != null">update_time = #{updateTime}</if>
         </set>

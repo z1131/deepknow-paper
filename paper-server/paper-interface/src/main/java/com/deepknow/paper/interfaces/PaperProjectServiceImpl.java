@@ -23,4 +23,19 @@ public class PaperProjectServiceImpl implements PaperProjectService {
     public ProjectDTO createProject(Long userId) {
         return appService.createProject(userId);
     }
+
+    @Override
+    public ProjectDTO getProject(Long projectId, Long userId) {
+        return appService.getProject(projectId, userId);
+    }
+
+    @Override
+    public ProjectDTO confirmTopic(Long projectId, Long userId, String title, String overview) {
+        return appService.confirmTopic(projectId, userId, title, overview);
+    }
+
+    @Override
+    public ProjectDTO uploadReferenceDoc(Long projectId, Long userId, String fileName, String content) {
+        return appService.uploadReferenceDoc(projectId, userId, fileName, content);
+    }
 }
