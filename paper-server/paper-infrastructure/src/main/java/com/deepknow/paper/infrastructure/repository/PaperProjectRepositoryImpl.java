@@ -66,6 +66,7 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
         po.setTopicOverview(entity.getTopicOverview());
         po.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
         po.setCreateTime(entity.getCreateTime());
+        po.setUpdateTime(LocalDateTime.now());
         return po;
     }
 
