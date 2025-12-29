@@ -68,6 +68,10 @@ jobs:
             set -euo pipefail
             echo "$ACR_PASSWORD" | docker login "$REGISTRY" -u "$ACR_USERNAME" --password-stdin
             cd /root/deepknow-paper/paper-server
+            
+            # 显式导出环境变量供 docker compose 使用
+            export ACR_REGISTRY="$REGISTRY"
+            
             docker compose -f docker-compose.prod.yml pull
             export SERVICE_IP=$(hostname -I | awk '{print $1}')
             
