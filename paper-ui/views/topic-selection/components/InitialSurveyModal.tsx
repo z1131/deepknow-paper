@@ -164,11 +164,11 @@ export const InitialSurveyModal: React.FC<InitialSurveyModalProps> = ({ onComple
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
                 {/* Header Graphic */}
-                <div className="h-32 bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
+                <div className="h-20 bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent scale-150"></div>
                 </div>
 
-                <div className="p-8">
+                <div className="p-6">
                     {/* Progress Indicator */}
                     <div className="flex items-center gap-2 mb-8 justify-center">
                         {[1, 2, 3].map((i) => (
