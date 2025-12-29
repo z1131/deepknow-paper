@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # JDK setup removed to prevent TLS/Network interference
+      # JDK setup removed to prevent TLS/Network interference matching portal workflow
 
       - name: Login to ACR
         uses: docker/login-action@v3
@@ -87,16 +87,15 @@ jobs:
             
             # Prepare directory
             mkdir -p $DEPLOY_DIR
-            
-            # Move uploaded compose file to correct location (flattening path)
-            # scp with target="/root/deepknow-paper" uploads paper-server/docker-compose.prod.yml inside it
-            if [ -f "/root/deepknow-paper/paper-server/docker-compose.prod.yml" ]; then
-                # File is already in the right place because of scp structure, just ensure permissions
-                chmod 644 /root/deepknow-paper/paper-server/docker-compose.prod.yml
-                mv /root/deepknow-paper/paper-server/docker-compose.prod.yml $DEPLOY_DIR/docker-compose.prod.yml
-            fi
-            
+
+            # The file is uploaded by scp to /root/deepknow-paper/paper-server/docker-compose.prod.yml, 
+            # which is exactly where $DEPLOY_DIR is.
             cd $DEPLOY_DIR
+
+            if [ ! -f "docker-compose.prod.yml" ]; then
+              echo "Error: docker-compose.prod.yml not found in $DEPLOY_DIR"
+              exit 1
+            fi
             
             # Login to ACR
             echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" -u "$ACR_USERNAME" --password-stdin
