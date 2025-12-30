@@ -1,13 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { SurveyData } from '../types';
-import { Upload, CheckCircle2, Circle, ArrowRight, FileText } from 'lucide-react';
+import { Upload, CheckCircle2, Circle, ArrowRight, FileText, Loader2 } from 'lucide-react';
+import { topicService } from '../../../services/topicService';
 
 interface InitialSurveyModalProps {
+    projectId: string;
     onComplete: (data: SurveyData) => void;
 }
 
-export const InitialSurveyModal: React.FC<InitialSurveyModalProps> = ({ onComplete }) => {
+export const InitialSurveyModal: React.FC<InitialSurveyModalProps> = ({ projectId, onComplete }) => {
     const [step, setStep] = useState(1);
+    const [isUploading, setIsUploading] = useState(false);
     const [data, setData] = useState<SurveyData>({
         hasTopic: false,
         topicDescription: '',
@@ -23,9 +26,21 @@ export const InitialSurveyModal: React.FC<InitialSurveyModalProps> = ({ onComple
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Simple text reading for context
-            const text = await file.text();
-            setData({ ...data, topicFile: file, topicFileContent: text });
+            setIsUploading(true);
+            try {
+                // 1. Read text for local preview
+                const text = await file.text();
+                
+                // 2. Upload to backend
+                await topicService.analyzeTopic(Number(projectId), file, data.topicDescription);
+                
+                setData({ ...data, topicFile: file, topicFileContent: text });
+            } catch (error) {
+                console.error("Upload failed", error);
+                alert("文件上传失败，请重试");
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 

@@ -63,7 +63,7 @@ export const TopicSelectionView: React.FC<TopicSelectionViewProps> = ({ task, on
   return (
     <div className="h-full w-full bg-slate-100 overflow-hidden font-sans text-slate-900 flex flex-col relative">
       {!surveyComplete && (
-        <InitialSurveyModal onComplete={handleSurveyComplete} />
+        <InitialSurveyModal projectId={task.id} onComplete={handleSurveyComplete} />
       )}
 
       {/* Main Layout */}

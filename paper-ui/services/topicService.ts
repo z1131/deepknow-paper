@@ -42,13 +42,15 @@ export const topicService = {
     /**
      * Confirm a selected topic
      */
-    async analyzeTopic(projectId: number, file: File, topicTitle: string): Promise<any> {
+    async analyzeTopic(projectId: number, file: File, topicTitle?: string): Promise<any> {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('topicTitle', topicTitle);
+        if (topicTitle) {
+            formData.append('topicTitle', topicTitle);
+        }
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/projects/${projectId}/topics/analyze`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/projects/${projectId}/topics/analyze-doc`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
