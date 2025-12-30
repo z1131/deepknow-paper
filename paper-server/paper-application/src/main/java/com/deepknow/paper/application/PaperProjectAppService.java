@@ -50,6 +50,25 @@ public class PaperProjectAppService {
         return toDTO(project);
     }
 
+    @Transactional
+    public ProjectDTO updateIntent(Long projectId, Long userId, String intentDescription) {
+        PaperProject project = repository.findById(projectId);
+        if (project == null || !project.getUserId().equals(userId)) {
+            throw new RuntimeException("Project not found or unauthorized");
+        }
+
+        // 推进状态
+        project.markTopicGenerating();
+        // 如果项目还没标题，可以用意图描述的前一部分暂代
+        if (project.getTitle() == null || project.getTitle().isEmpty() || project.getTitle().contains("未命名")) {
+            String title = intentDescription.length() > 30 ? intentDescription.substring(0, 30) + "..." : intentDescription;
+            // 简单处理，真正的 confirmTopic 会正式定名
+        }
+        
+        PaperProject saved = repository.save(project);
+        return toDTO(saved);
+    }
+
     public ProjectDTO confirmTopic(Long projectId, Long userId, String title, String overview) {
         PaperProject project = repository.findById(projectId);
         if (project == null || !project.getUserId().equals(userId)) {
@@ -76,6 +95,8 @@ public class PaperProjectAppService {
 
         // 3. 更新领域模型 (存 URL，标记用途为选题辅助)
         project.addReferenceDoc(fileName, fileUrl, textUrl, DocUsage.TOPIC_SUPPORT);
+        // 标记为正在生成中，避免下次进入重复弹窗
+        project.markTopicGenerating();
         
         PaperProject saved = repository.save(project);
         return toDTO(saved);

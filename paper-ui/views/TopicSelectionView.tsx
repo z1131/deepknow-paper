@@ -4,35 +4,20 @@ import { InitialSurveyModal } from './topic-selection/components/InitialSurveyMo
 import { ChatInterface } from './topic-selection/components/ChatInterface';
 import { TopicStatusSidebar } from './topic-selection/components/TopicStatusSidebar';
 import { SurveyData, ThesisPlan } from './topic-selection/types';
+import { topicService } from '../services/topicService';
 
 interface TopicSelectionViewProps {
-  task: PaperTask;
-  onUpdateTask: (updates: Partial<PaperTask>) => void;
-  onComplete: () => void;
-}
+// ... existing interface ...
+  const handleSurveyComplete = async (data: SurveyData) => {
+    try {
+      // Notify backend that we've started generating (even if no file was uploaded)
+      await topicService.updateIntent(Number(task.id), data.topicDescription || "User Intent Submitted");
+      
+      setSurveyData(data);
+      setSurveyComplete(true);
 
-export const TopicSelectionView: React.FC<TopicSelectionViewProps> = ({ task, onUpdateTask, onComplete }) => {
-  // Local state for the UI flow
-  const [surveyComplete, setSurveyComplete] = useState(false);
-  const [surveyData, setSurveyData] = useState<SurveyData>({
-    hasTopic: false,
-    innovationDefined: false,
-    needsMajorRevision: false,
-    isComplete: false
-  });
-
-  // State to hold the structured thesis plan (Mocked for now)
-  const [thesisPlan, setThesisPlan] = useState<ThesisPlan>({
-    title: task.title && !task.title.includes("Untitled") ? task.title : "",
-    contents: []
-  });
-
-  const handleSurveyComplete = (data: SurveyData) => {
-    setSurveyData(data);
-    setSurveyComplete(true);
-
-    // Initialize Title if provided in survey
-    if (data.topicDescription) {
+      // Initialize Title if provided in survey
+      if (data.topicDescription) {
       setThesisPlan(prev => ({
         ...prev,
         title: data.topicDescription || ""

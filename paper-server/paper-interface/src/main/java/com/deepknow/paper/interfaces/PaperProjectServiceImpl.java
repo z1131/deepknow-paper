@@ -31,6 +31,11 @@ public class PaperProjectServiceImpl implements PaperProjectService {
     }
 
     @Override
+    public ProjectDTO updateIntent(Long projectId, Long userId, String intentDescription) {
+        return appService.updateIntent(projectId, userId, intentDescription);
+    }
+
+    @Override
     public ProjectDTO confirmTopic(Long projectId, Long userId, String title, String overview) {
         return appService.confirmTopic(projectId, userId, title, overview);
     }

@@ -32,6 +32,15 @@ public class PaperProject {
     }
 
     /**
+     * 业务动作：标记为正在生成选题（用户已提交意图或文档）
+     */
+    public void markTopicGenerating() {
+        if (this.status == ProjectStatus.INIT) {
+            this.status = ProjectStatus.TOPIC_GENERATING;
+        }
+    }
+
+    /**
      * 业务动作：确认选题
      */
     public void confirmTopic(String title, String overview) {

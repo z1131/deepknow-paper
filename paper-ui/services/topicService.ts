@@ -77,5 +77,17 @@ export const topicService = {
             console.error("Topic Confirmation Error:", error);
             throw error;
         }
+    },
+
+    async updateIntent(projectId: number, intentDescription: string): Promise<any> {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/projects/${projectId}/intent`, {
+                intentDescription
+            });
+            return response.data.data;
+        } catch (error) {
+            console.error('Error updating intent:', error);
+            throw error;
+        }
     }
 };
