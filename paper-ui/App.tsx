@@ -34,14 +34,14 @@ const App: React.FC = () => {
       }
 
       const projects = await projectService.listProjects();
-      const loadedTasks: PaperTask[] = projects.map(p => ({
-        id: p.id.toString(),
-        title: p.title || '未命名论文',
-        currentStep: mapStatusToStep(p.status),
-        outline: [],
-        images: []
-      }));
-      setTasks(loadedTasks);
+              const loadedTasks: PaperTask[] = projects.map(p => ({
+                id: p.id.toString(),
+                title: p.title || '未命名论文',
+                status: p.status, // Pass the business status
+                currentStep: mapStatusToStep(p.status),
+                outline: [],
+                images: []
+              }));      setTasks(loadedTasks);
 
       // Auto-select the most recent project if none selected
       if (loadedTasks.length > 0 && !activeTaskId) {
@@ -87,6 +87,7 @@ const App: React.FC = () => {
       const newTask: PaperTask = {
         id: projectDTO.id.toString(),
         title: projectDTO.title || '新建未命名论文',
+        status: projectDTO.status,
         currentStep: WorkflowStep.TOPIC_SELECTION,
         outline: [],
         images: []

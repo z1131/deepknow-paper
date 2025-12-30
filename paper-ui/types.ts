@@ -24,6 +24,7 @@ export interface Topic {
 export interface PaperTask {
   id: string;
   title: string;
+  status: string; // Business status (INIT, TOPIC_GENERATING, etc.)
   currentStep: WorkflowStep;
   
   // Step 1 Data
