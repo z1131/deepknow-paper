@@ -86,7 +86,9 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
         ReferenceDocPO po = new ReferenceDocPO();
         po.setProjectId(projectId);
         po.setFileName(doc.getFileName());
-        po.setContent(doc.getContent());
+        po.setFileUrl(doc.getFileUrl());
+        po.setTextUrl(doc.getTextUrl());
+        po.setUsageType(doc.getUsage() != null ? doc.getUsage().name() : null);
         po.setCreateTime(doc.getCreateTime());
         return po;
     }

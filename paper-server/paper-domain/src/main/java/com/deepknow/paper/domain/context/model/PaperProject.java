@@ -1,5 +1,6 @@
 package com.deepknow.paper.domain.context.model;
 
+import com.deepknow.paper.domain.context.model.enums.DocUsage;
 import com.deepknow.paper.domain.context.model.enums.ProjectStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,8 +46,8 @@ public class PaperProject {
     /**
      * 业务动作：添加参考文档
      */
-    public void addReferenceDoc(String fileName, String content) {
-        ReferenceDoc doc = new ReferenceDoc(null, this.id, fileName, content, LocalDateTime.now());
+    public void addReferenceDoc(String fileName, String fileUrl, String textUrl, DocUsage usage) {
+        ReferenceDoc doc = new ReferenceDoc(null, this.id, fileName, fileUrl, textUrl, usage, LocalDateTime.now());
         this.referenceDocs.add(doc);
     }
 

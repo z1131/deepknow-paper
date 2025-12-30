@@ -8,5 +8,5 @@ public interface PaperProjectService {
     ProjectDTO createProject(Long userId);
     ProjectDTO getProject(Long projectId, Long userId);
     ProjectDTO confirmTopic(Long projectId, Long userId, String title, String overview);
-    ProjectDTO uploadReferenceDoc(Long projectId, Long userId, String fileName, String content);
+    ProjectDTO uploadReferenceDoc(Long projectId, Long userId, String fileName, byte[] fileBytes, String textContent);
 }

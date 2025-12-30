@@ -6,17 +6,19 @@
         <id column="id" property="id" />
         <result column="project_id" property="projectId" />
         <result column="file_name" property="fileName" />
-        <result column="content" property="content" />
+        <result column="file_url" property="fileUrl" />
+        <result column="text_url" property="textUrl" />
+        <result column="usage_type" property="usageType" />
         <result column="create_time" property="createTime" />
     </resultMap>
 
     <insert id="insert" parameterType="com.deepknow.paper.infrastructure.repository.po.ReferenceDocPO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO paper_reference_doc (project_id, file_name, content, create_time)
-        VALUES (#{projectId}, #{fileName}, #{content}, #{createTime})
+        INSERT INTO paper_reference_doc (project_id, file_name, file_url, text_url, usage_type, create_time)
+        VALUES (#{projectId}, #{fileName}, #{fileUrl}, #{textUrl}, #{usageType}, #{createTime})
     </insert>
 
     <select id="selectByProjectId" resultMap="BaseResultMap">
-        SELECT id, project_id, file_name, content, create_time
+        SELECT id, project_id, file_name, file_url, text_url, usage_type, create_time
         FROM paper_reference_doc
         WHERE project_id = #{projectId}
         ORDER BY create_time ASC

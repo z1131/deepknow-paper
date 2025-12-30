@@ -6,7 +6,9 @@ public class ReferenceDocPO {
     private Long id;
     private Long projectId;
     private String fileName;
-    private String content;
+    private String fileUrl;
+    private String textUrl;
+    private String usageType;
     private LocalDateTime createTime;
 
     // Getters and Setters
@@ -16,8 +18,12 @@ public class ReferenceDocPO {
     public void setProjectId(Long projectId) { this.projectId = projectId; }
     public String getFileName() { return fileName; }
     public void setFileName(String fileName) { this.fileName = fileName; }
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
+    public String getFileUrl() { return fileUrl; }
+    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+    public String getTextUrl() { return textUrl; }
+    public void setTextUrl(String textUrl) { this.textUrl = textUrl; }
+    public String getUsageType() { return usageType; }
+    public void setUsageType(String usageType) { this.usageType = usageType; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 }
