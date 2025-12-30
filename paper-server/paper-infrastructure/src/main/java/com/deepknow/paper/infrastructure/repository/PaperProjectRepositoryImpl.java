@@ -7,6 +7,8 @@ import com.deepknow.paper.infrastructure.repository.mapper.PaperProjectMapper;
 import com.deepknow.paper.infrastructure.repository.mapper.ReferenceDocMapper;
 import com.deepknow.paper.infrastructure.repository.po.PaperProjectPO;
 import com.deepknow.paper.infrastructure.repository.po.ReferenceDocPO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 
 @Repository
 public class PaperProjectRepositoryImpl implements PaperProjectRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(PaperProjectRepositoryImpl.class);
 
     @Autowired
     private PaperProjectMapper projectMapper;
@@ -48,9 +52,12 @@ public class PaperProjectRepositoryImpl implements PaperProjectRepository {
             projectMapper.updateById(po);
         }
         
+        log.info("Saving project {}, reference docs count: {}", project.getId(), project.getReferenceDocs().size());
+
         // 级联保存参考文档 (简单实现：仅插入新增的)
         project.getReferenceDocs().forEach(doc -> {
             if (doc.getId() == null) {
+                log.info("Inserting reference doc: {}", doc.getFileName());
                 referenceDocMapper.insert(toDocPO(doc, po.getId()));
             }
         });
