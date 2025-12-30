@@ -2,7 +2,7 @@ import axios from './axios';
 import { getApiUrl } from './config';
 
 // API Base URL
-const API_BASE_URL = getApiUrl('core');
+const API_BASE_URL = getApiUrl('api/paper');
 
 export interface TopicCandidate {
     title: string;
